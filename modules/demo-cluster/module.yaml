@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: Module
+metadata:
+  name: demo-cluster
+  version: 0.1.0
+  description: >-
+    Fully local, fake "cloud provider" module for exploring hyve without any
+    cloud credentials. Tracks cluster state as a file under .state/ instead of
+    calling a real API — safe to create/delete/scale as many times as you like.
+  author: hyve-sample-repo
+  license: MIT
+  tags:
+    - demo
+    - local
+spec:
+  params:
+    - name: node_count
+      description: Number of "nodes" this fake cluster reports (cosmetic only)
+      required: false
+      default: "3"
+    - name: node_size
+      description: "Node size label (cosmetic only, e.g. small/medium/large)"
+      required: false
+      default: small

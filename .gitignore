@@ -1,0 +1,3 @@
+# Runtime state written by modules/demo-cluster's scripts — not part of the
+# repo's desired state, purely local bookkeeping for the fake module.
+modules/demo-cluster/.state/
