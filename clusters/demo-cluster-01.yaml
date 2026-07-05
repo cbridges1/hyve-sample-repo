@@ -10,6 +10,11 @@ spec:
     params:
         node_count: "3"
         node_size: small
+    driverOutputs:
+        HYVE_CLUSTER_STATUS: ACTIVE
+        HYVE_ENDPOINT: https://demo-cluster.local/demo-cluster-01
+        HYVE_LAST_PARAMS_HASH: 64ea2953c82846f9d2e2e91c0f04328c1a883502fb8cf514b644844ba17fb3fd
+        HYVE_NODE_COUNT: "3"
     workflows:
         onCreate:
             - setup-demo
