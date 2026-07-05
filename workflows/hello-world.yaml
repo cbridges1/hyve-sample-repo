@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Workflow
+metadata:
+  name: hello-world
+  description: >-
+    Not wired to any lifecycle hook — run it directly to see how ad-hoc
+    workflows and spec.inputs work:
+      hyve workflow run hello-world --set NAME=world
+    Omit --set and hyve will prompt for NAME interactively (or in the TUI).
+spec:
+  inputs:
+    - name: NAME
+      description: Who to greet
+      default: hyve
+  jobs:
+    - name: greet
+      steps:
+        - name: say-hello
+          command: echo "Hello, $NAME! This ran outside any cluster lifecycle."
