@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Cluster
+metadata:
+    name: demo-aws-01
+    region: us-east-1
+spec:
+    driver:
+        source: ./modules/demo-aws-eks
+        version: 0.1.0
+    params:
+        instance_type: t3.medium
+        node_role_name: demo-eks-node-role
+        vpc_id: vpc-0demo00000000000
+    workflows:
+        onCreate:
+            - setup-demo
+        onDelete:
+            - cleanup-demo
