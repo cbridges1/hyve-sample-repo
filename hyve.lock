@@ -1,6 +1,14 @@
 version: 1
 modules:
-    ./modules/demo-cluster@0.1.0:
-        source: ./modules/demo-cluster
+    ./modules/demo-civo@0.1.0:
+        source: ./modules/demo-civo
+        resolved: ""
+        sha256: ""
+    ./modules/demo-aws-eks@0.1.0:
+        source: ./modules/demo-aws-eks
+        resolved: ""
+        sha256: ""
+    ./modules/demo-gke@0.1.0:
+        source: ./modules/demo-gke
         resolved: ""
         sha256: ""

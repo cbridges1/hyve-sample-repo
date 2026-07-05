@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Template
+metadata:
+  name: demo-civo-template
+  description: Civo-flavored reference template using the fully local demo-civo module
+spec:
+  driver:
+    source: ./modules/demo-civo
+    version: 0.1.0
+  region: NYC1
+  params:
+    region: NYC1
+    node_size: g4s.kube.small
+    node_count: "3"
+  workflows:
+    onCreate:
+      - setup-demo
+    onDelete:
+      - cleanup-demo

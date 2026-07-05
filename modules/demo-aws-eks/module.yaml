@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Module
+metadata:
+  name: demo-aws-eks
+  version: 0.1.0
+  description: >-
+    Fake AWS EKS-flavored module — mirrors the params a real EKS module would
+    expose (vpc_id, node_role_name, instance_type), but every operation is a
+    plain YAML "Workflow" that only touches a local state file under .state/.
+    No AWS credentials, no real API calls.
+  author: hyve-sample-repo
+  license: MIT
+  tags: [demo, local, aws-eks-flavored]
+spec:
+  params:
+    - name: vpc_id
+      description: "Fake VPC ID, e.g. vpc-0abc123456789 (cosmetic only)"
+      required: false
+      default: vpc-0demo00000000000
+    - name: node_role_name
+      description: "Fake IAM node role name (cosmetic only)"
+      required: false
+      default: demo-eks-node-role
+    - name: instance_type
+      description: "Fake EC2 instance type, e.g. t3.medium (cosmetic only)"
+      required: false
+      default: t3.medium

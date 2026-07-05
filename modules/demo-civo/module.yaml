@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: Module
+metadata:
+  name: demo-civo
+  version: 0.1.0
+  description: >-
+    Fake Civo-flavored module — mirrors the params a real Civo module would
+    expose (region, node_size, node_count), but every operation is a plain
+    YAML "Workflow" (see create.yaml/delete.yaml/status.yaml/scale.yaml)
+    that only touches a local state file under .state/. No cloud credentials,
+    no real API calls, no shell scripts — demonstrates that module operations
+    can be authored as YAML instead of .sh files.
+  author: hyve-sample-repo
+  license: MIT
+  tags: [demo, local, civo-flavored]
+spec:
+  params:
+    - name: region
+      description: "Fake Civo region code, e.g. NYC1, LON1, FRA1 (cosmetic only)"
+      required: false
+      default: NYC1
+    - name: node_size
+      description: "Fake Civo node size, e.g. g4s.kube.small (cosmetic only)"
+      required: false
+      default: g4s.kube.small
+    - name: node_count
+      description: Number of "nodes" this fake cluster reports (cosmetic only)
+      required: false
+      default: "3"

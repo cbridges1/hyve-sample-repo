@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ClusterAuth
+metadata:
+  name: demo-aws-eks-auth
+spec:
+  methods:
+    - name: default
+      description: "No-op — this fake module has no real API server to authenticate into"
+      auth:
+        script: |
+          echo "demo-aws-eks has no real API server to authenticate into." >&2
+          echo "A real EKS module would run 'aws eks update-kubeconfig --name <name>'" >&2
+          echo "here to merge a working context into ~/.kube/config." >&2

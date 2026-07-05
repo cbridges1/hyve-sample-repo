@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Template
+metadata:
+  name: demo-gcp-template
+  description: GKE-flavored reference template using the fully local demo-gke module
+spec:
+  driver:
+    source: ./modules/demo-gke
+    version: 0.1.0
+  region: us-central1
+  params:
+    project: demo-project
+    zone: us-central1-a
+    machine_type: e2-medium
+  workflows:
+    onCreate:
+      - setup-demo
+    onDelete:
+      - cleanup-demo

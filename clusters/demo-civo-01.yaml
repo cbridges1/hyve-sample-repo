@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Cluster
+metadata:
+    name: demo-civo-01
+    region: NYC1
+spec:
+    driver:
+        source: ./modules/demo-civo
+        version: 0.1.0
+    params:
+        node_count: "3"
+        node_size: g4s.kube.small
+        region: NYC1
+    workflows:
+        onCreate:
+            - setup-demo
+        onDelete:
+            - cleanup-demo

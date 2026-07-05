@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Workflow
+metadata:
+  name: demo-civo-delete
+spec:
+  jobs:
+    - name: delete
+      steps:
+        - name: remove-state
+          run: |
+            rm -f ".state/demo-civo/$HYVE_CLUSTER_NAME"
+            echo "HYVE_CLUSTER_STATUS=NOT_FOUND"

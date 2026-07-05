@@ -1,3 +1,4 @@
-# Runtime state written by modules/demo-cluster's scripts — not part of the
-# repo's desired state, purely local bookkeeping for the fake module.
-modules/demo-cluster/.state/
+# Runtime state written by the demo modules' create/status/delete/scale
+# operations (see modules/*/module.yaml) — not part of the repo's desired
+# state, purely local bookkeeping for the fake providers.
+.state/

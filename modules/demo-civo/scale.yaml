@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Workflow
+metadata:
+  name: demo-civo-scale
+spec:
+  jobs:
+    - name: scale
+      steps:
+        - name: update-state
+          run: |
+            if [ -f ".state/demo-civo/$HYVE_CLUSTER_NAME" ]; then
+              echo "region=$HYVE_PARAM_REGION size=$HYVE_PARAM_NODE_SIZE count=$HYVE_PARAM_NODE_COUNT" > ".state/demo-civo/$HYVE_CLUSTER_NAME"
+            fi
+            echo "HYVE_NODE_COUNT=${HYVE_PARAM_NODE_COUNT:-3}"
