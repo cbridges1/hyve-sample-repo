@@ -25,3 +25,4 @@ spec:
             - setup-demo
         onDelete:
             - cleanup-demo
+    delete: true
