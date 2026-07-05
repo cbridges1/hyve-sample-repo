@@ -11,6 +11,11 @@ spec:
         machine_type: e2-medium
         project: demo-project
         zone: us-central1-a
+    driverOutputs:
+        HYVE_CLUSTER_STATUS: ACTIVE
+        HYVE_ENDPOINT: https://demo-gke.local/demo-gcp-01
+        HYVE_LAST_PARAMS_HASH: 8c4c8f0cef545719108dff5f20e1ae7edd514014a5a3380c1db20597fa7a04ec
+        HYVE_MACHINE_TYPE: e2-medium
     workflows:
         onCreate:
             - setup-demo
