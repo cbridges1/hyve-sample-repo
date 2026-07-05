@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Cluster
+metadata:
+    name: demo-civo-02
+    region: NYC2
+spec:
+    driver:
+        source: ./modules/demo-civo
+        version: 0.1.0
+    params:
+        applications: Traefik
+        civo_organization: default
+        node_count: "5"
+        node_size: g4s.kube.small
+        region: NYC1
+    workflows:
+        onCreate:
+            - setup-demo
+        onDelete:
+            - cleanup-demo

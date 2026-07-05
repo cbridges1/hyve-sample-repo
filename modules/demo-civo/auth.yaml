@@ -9,5 +9,6 @@ spec:
       auth:
         script: |
           echo "demo-civo has no real API server to authenticate into." >&2
-          echo "A real Civo module would run 'civo kubernetes config <name> --save' here" >&2
-          echo "to merge a working context into ~/.kube/config." >&2
+          echo "A real Civo module would resolve \$HYVE_PARAM_CIVO_ORGANIZATION to an" >&2
+          echo "org ID + API token, then run 'civo kubernetes config <name> --save --merge'" >&2
+          echo "here to merge a working context into ~/.kube/config." >&2

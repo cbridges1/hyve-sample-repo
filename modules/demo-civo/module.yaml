@@ -4,12 +4,17 @@ metadata:
   name: demo-civo
   version: 0.1.0
   description: >-
-    Fake Civo-flavored module — mirrors the params a real Civo module would
-    expose (region, node_size, node_count), but every operation is a plain
-    YAML "Workflow" (see create.yaml/delete.yaml/status.yaml/scale.yaml)
-    that only touches a local state file under .state/. No cloud credentials,
-    no real API calls, no shell scripts — demonstrates that module operations
-    can be authored as YAML instead of .sh files.
+    Fake Civo-flavored module — mirrors the real Civo provider's shape
+    (see hyve-action-poc's internal/provider/civo): a single homogeneous
+    node pool sized by node_size/node_count (unlike EKS/GKE, Civo has no
+    heterogeneous node groups), an optional marketplace "applications" list
+    installed at create time, and an organization alias used to resolve
+    which Civo account/token to act as. Every operation here is a plain
+    YAML "Workflow"/"ClusterAuth" (see create.yaml/delete.yaml/status.yaml/
+    scale.yaml/auth.yaml) that only touches a local state file under
+    .state/. No cloud credentials, no real API calls, no shell scripts —
+    demonstrates that module operations can be authored as YAML instead of
+    .sh files.
   author: hyve-sample-repo
   license: MIT
   tags: [demo, local, civo-flavored]
@@ -20,10 +25,25 @@ spec:
       required: false
       default: NYC1
     - name: node_size
-      description: "Fake Civo node size, e.g. g4s.kube.small (cosmetic only)"
+      description: >-
+        Fake Civo node size, e.g. g4s.kube.small. Civo clusters are a single
+        homogeneous pool, so this (with node_count) is the only sizing knob —
+        there's no per-node-group instance_type like EKS/GKE (cosmetic only)
       required: false
       default: g4s.kube.small
     - name: node_count
-      description: Number of "nodes" this fake cluster reports (cosmetic only)
+      description: Number of "nodes" in that single pool (cosmetic only)
       required: false
       default: "3"
+    - name: applications
+      description: >-
+        Comma-separated Civo marketplace applications to install at create
+        time, e.g. "Traefik,cert-manager" (cosmetic only)
+      required: false
+      default: ""
+    - name: civo_organization
+      description: >-
+        Fake Civo organization alias — a real module resolves this to an
+        org ID + API token (cosmetic only)
+      required: false
+      default: default

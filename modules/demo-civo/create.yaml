@@ -7,9 +7,15 @@ spec:
     - name: create
       steps:
         - name: write-state
+          # Civo only supports a single homogeneous node pool (no per-group
+          # instance types like EKS/GKE), so node_size/node_count fully
+          # describe the pool — mirrors hyve-action-poc's civo provider,
+          # which uses the first NodeGroup and warns if more than one is given.
           run: |
             mkdir -p .state/demo-civo
-            echo "region=$HYVE_PARAM_REGION size=$HYVE_PARAM_NODE_SIZE count=$HYVE_PARAM_NODE_COUNT" > ".state/demo-civo/$HYVE_CLUSTER_NAME"
+            echo "region=$HYVE_PARAM_REGION size=$HYVE_PARAM_NODE_SIZE count=$HYVE_PARAM_NODE_COUNT apps=$HYVE_PARAM_APPLICATIONS org=$HYVE_PARAM_CIVO_ORGANIZATION" > ".state/demo-civo/$HYVE_CLUSTER_NAME"
             echo "HYVE_CLUSTER_STATUS=ACTIVE"
             echo "HYVE_ENDPOINT=https://demo-civo.local/$HYVE_CLUSTER_NAME"
+            echo "HYVE_MASTER_IP=10.0.1.10"
+            echo "HYVE_ACCESS_PORT=6443"
             echo "HYVE_NODE_COUNT=${HYVE_PARAM_NODE_COUNT:-3}"

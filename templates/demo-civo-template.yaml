@@ -12,6 +12,8 @@ spec:
     region: NYC1
     node_size: g4s.kube.small
     node_count: "3"
+    applications: "Traefik,cert-manager"
+    civo_organization: default
   workflows:
     onCreate:
       - setup-demo
