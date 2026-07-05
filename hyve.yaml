@@ -1,0 +1,18 @@
+# hyve.yaml — repository-level configuration. See docs/configuration.mdx in
+# https://github.com/cbridges1/hyve-docs
+
+reconcile:
+  mode: local # local (default) — provisions directly from the machine running `hyve reconcile`.
+              # Switch to "cicd" if you want a pipeline to call `hyve reconcile --path .` instead.
+  strictDelete: false
+  strictResourceDelete: false
+
+# Optional — configures `hyve serve` (a REST + WebSocket API server exposing
+# the same operations as the CLI). Try it:
+#   hyve serve --path .
+#   curl http://localhost:8080/clusters
+# See docs/guides/server-mode.mdx in https://github.com/cbridges1/hyve-docs
+server:
+  port: 8080
+  auth:
+    mode: none # local dev default — see the Server Mode guide for forward-auth
