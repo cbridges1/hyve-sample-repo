@@ -13,6 +13,6 @@ reconcile:
 #   curl http://localhost:8080/clusters
 # See docs/guides/server-mode.mdx in https://github.com/cbridges1/hyve-docs
 server:
-  port: 8080
+  frontendUrl: "https://cbridges1.github.io/hyve-studio"
   auth:
     mode: none # local dev default — see the Server Mode guide for forward-auth
