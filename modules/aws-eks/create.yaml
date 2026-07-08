@@ -5,7 +5,7 @@ metadata:
   description: Provision an Amazon EKS cluster and a managed nodegroup
 spec:
   jobs:
-    - name: provision
+    - name: control-plane
       steps:
         - name: create-control-plane
           script: |
@@ -33,8 +33,10 @@ spec:
             echo "HYVE_CLUSTER_ID=$(printf '%s' "$cluster" | jq -r '.cluster.arn')"
             echo "HYVE_EKS_CLUSTER_ENDPOINT=$(printf '%s' "$cluster" | jq -r '.cluster.endpoint')"
 
+    - name: nodegroup
+      dependsOn: [control-plane]
+      steps:
         - name: create-nodegroup
-          dependsOn: [create-control-plane]
           script: |
             set -e
 
