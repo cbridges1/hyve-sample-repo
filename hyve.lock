@@ -1,14 +1,18 @@
 version: 1
 modules:
-    ./modules/demo-civo@0.1.0:
-        source: ./modules/demo-civo
+    ./modules/civo@1.0.0:
+        source: ./modules/civo
         resolved: ""
         sha256: ""
-    ./modules/demo-aws-eks@0.1.0:
-        source: ./modules/demo-aws-eks
+    ./modules/aws-eks@1.0.0:
+        source: ./modules/aws-eks
         resolved: ""
         sha256: ""
-    ./modules/demo-gke@0.1.0:
-        source: ./modules/demo-gke
+    ./modules/gke@1.0.0:
+        source: ./modules/gke
+        resolved: ""
+        sha256: ""
+    ./modules/k3d@1.0.0:
+        source: ./modules/k3d
         resolved: ""
         sha256: ""

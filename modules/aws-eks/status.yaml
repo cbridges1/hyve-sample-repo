@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: Workflow
+metadata:
+  name: status
+  description: Query the status of an Amazon EKS cluster
+spec:
+  jobs:
+    - name: check-status
+      steps:
+        - name: query-cluster
+          script: |
+            set -e
+
+            result=$(aws eks describe-cluster --name "$HYVE_CLUSTER_NAME" --region "$HYVE_CLUSTER_REGION" --output json 2>/dev/null) || result=""
+
+            if [ -z "$result" ]; then
+              echo "HYVE_CLUSTER_STATUS=NOT_FOUND"
+              exit 0
+            fi
+
+            status=$(printf '%s' "$result" | jq -r '.cluster.status // "UNKNOWN"')
+
+            case "$status" in
+              ACTIVE)   echo "HYVE_CLUSTER_STATUS=ACTIVE" ;;
+              CREATING) echo "HYVE_CLUSTER_STATUS=CREATING" ;;
+              UPDATING) echo "HYVE_CLUSTER_STATUS=UPDATING" ;;
+              DELETING) echo "HYVE_CLUSTER_STATUS=DELETING" ;;
+              FAILED)   echo "HYVE_CLUSTER_STATUS=FAILED" ;;
+              *)        echo "HYVE_CLUSTER_STATUS=NOT_FOUND" ;;
+            esac

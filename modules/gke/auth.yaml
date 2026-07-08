@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ClusterAuth
+metadata:
+  name: gke-auth
+spec:
+  methods:
+    - name: local
+      description: >
+        Auth via the gcloud CLI. Fetches the kubeconfig for the cluster and
+        merges it into ~/.kube/config. Requires the gcloud CLI and kubectl.
+      deps:
+        - gcloud
+        - kubectl
+      auth:
+        script: |
+          gcloud container clusters get-credentials "$HYVE_CLUSTER_NAME" \
+            --project "$HYVE_PARAM_PROJECT" \
+            --zone "$HYVE_PARAM_ZONE"
+      exports: KUBECONFIG

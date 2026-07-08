@@ -3,19 +3,19 @@ kind: Workflow
 metadata:
   name: setup-demo
   description: >-
-    Runs automatically after a cluster is created (see templates/demo-template.yaml's
-    spec.workflows.onCreate). Demonstrates a multi-job, multi-step workflow using
-    the HYVE_* variables the reconciler injects — HYVE_CLUSTER_NAME, HYVE_CLUSTER_REGION,
-    and any driver outputs (HYVE_ENDPOINT, HYVE_NODE_COUNT — see modules/demo-cluster/create.sh).
+    Runs automatically after a cluster is created (see each template's
+    spec.workflows.onCreate). Demonstrates a multi-job, multi-step workflow
+    using the HYVE_* variables the reconciler injects — HYVE_CLUSTER_NAME and
+    HYVE_CLUSTER_REGION are always available; driver-specific outputs (e.g.
+    HYVE_CLUSTER_ID, HYVE_NODE_COUNT — see each module's create.yaml) vary
+    per provider, so this workflow only relies on the two that are universal.
 spec:
   jobs:
     - name: announce
       description: Print a summary of the cluster that was just created
       steps:
         - name: print-summary
-          command: >-
-            echo "Cluster '$HYVE_CLUSTER_NAME' is ACTIVE in $HYVE_CLUSTER_REGION
-            (endpoint: $HYVE_ENDPOINT, nodes: $HYVE_NODE_COUNT)"
+          command: echo "Cluster '$HYVE_CLUSTER_NAME' is ACTIVE in region/zone '$HYVE_CLUSTER_REGION'"
 
     - name: seed-data
       description: Simulate a post-provisioning setup step (e.g. installing a starter app)

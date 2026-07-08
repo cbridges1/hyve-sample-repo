@@ -1,0 +1,34 @@
+apiVersion: v1
+kind: Workflow
+metadata:
+  name: scale
+  description: Scale a local k3d cluster's agent node count up or down
+spec:
+  jobs:
+    - name: scale
+      steps:
+        - name: scale-agents
+          script: |
+            set -e
+
+            desired="${HYVE_PARAM_AGENT_COUNT:-1}"
+            current_agents=$(k3d node list -o json | jq -c --arg cluster "$HYVE_CLUSTER_NAME" \
+              '[.[] | select(.role=="agent" and .runtimeLabels["k3d.cluster"]==$cluster) | .name]')
+            current=$(printf '%s' "$current_agents" | jq 'length')
+
+            if [ "$current" -lt "$desired" ]; then
+              to_add=$((desired - current))
+              i=0
+              while [ "$i" -lt "$to_add" ]; do
+                new_name="${HYVE_CLUSTER_NAME}-extra-agent-$(date +%s)-${i}"
+                k3d node create "$new_name" --cluster "$HYVE_CLUSTER_NAME" --role agent --wait
+                i=$((i + 1))
+              done
+            elif [ "$current" -gt "$desired" ]; then
+              to_remove=$((current - desired))
+              printf '%s' "$current_agents" | jq -r ".[0:${to_remove}][]" | while read -r node_name; do
+                k3d node delete "$node_name"
+              done
+            fi
+
+            echo "HYVE_NODE_COUNT=${desired}"

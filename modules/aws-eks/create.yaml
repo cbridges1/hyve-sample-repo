@@ -1,0 +1,63 @@
+apiVersion: v1
+kind: Workflow
+metadata:
+  name: create
+  description: Provision an Amazon EKS cluster and a managed nodegroup
+spec:
+  jobs:
+    - name: provision
+      steps:
+        - name: create-control-plane
+          script: |
+            set -e
+
+            nodegroup_name="${HYVE_CLUSTER_NAME}-ng"
+            k8s_version="${HYVE_PARAM_KUBERNETES_VERSION:-}"
+
+            set -- \
+              eks create-cluster \
+              --name "$HYVE_CLUSTER_NAME" \
+              --region "$HYVE_CLUSTER_REGION" \
+              --role-arn "$HYVE_PARAM_EKS_ROLE_ARN" \
+              --resources-vpc-config "subnetIds=${HYVE_PARAM_SUBNET_IDS}" \
+              --output json
+
+            [ -n "$k8s_version" ] && set -- "$@" --kubernetes-version "$k8s_version"
+
+            aws "$@" > /dev/null
+
+            echo "Waiting for control plane to become ACTIVE (this takes several minutes)..."
+            aws eks wait cluster-active --name "$HYVE_CLUSTER_NAME" --region "$HYVE_CLUSTER_REGION"
+
+            cluster=$(aws eks describe-cluster --name "$HYVE_CLUSTER_NAME" --region "$HYVE_CLUSTER_REGION" --output json)
+            echo "HYVE_CLUSTER_ID=$(printf '%s' "$cluster" | jq -r '.cluster.arn')"
+            echo "HYVE_EKS_CLUSTER_ENDPOINT=$(printf '%s' "$cluster" | jq -r '.cluster.endpoint')"
+
+        - name: create-nodegroup
+          dependsOn: [create-control-plane]
+          script: |
+            set -e
+
+            nodegroup_name="${HYVE_CLUSTER_NAME}-ng"
+            instance_type="${HYVE_PARAM_INSTANCE_TYPE:-t3.medium}"
+            node_count="${HYVE_PARAM_NODE_COUNT:-2}"
+            max_size=$((node_count + 2))
+
+            aws eks create-nodegroup \
+              --cluster-name "$HYVE_CLUSTER_NAME" \
+              --nodegroup-name "$nodegroup_name" \
+              --region "$HYVE_CLUSTER_REGION" \
+              --subnets "$HYVE_PARAM_SUBNET_IDS" \
+              --node-role "$HYVE_PARAM_NODE_ROLE_ARN" \
+              --instance-types "$instance_type" \
+              --scaling-config "minSize=1,maxSize=${max_size},desiredSize=${node_count}" \
+              --output json > /dev/null
+
+            echo "Waiting for nodegroup to become ACTIVE..."
+            aws eks wait nodegroup-active \
+              --cluster-name "$HYVE_CLUSTER_NAME" \
+              --nodegroup-name "$nodegroup_name" \
+              --region "$HYVE_CLUSTER_REGION"
+
+            echo "HYVE_NODEGROUP_NAME=${nodegroup_name}"
+            echo "HYVE_NODE_COUNT=${node_count}"

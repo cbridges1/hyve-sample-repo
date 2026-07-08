@@ -1,5 +1,5 @@
 # hyve.yaml — repository-level configuration. See docs/configuration.mdx in
-# https://github.com/cbridges1/hyve-docs
+# https://github.com/cbridges1/hyve-website
 
 reconcile:
   mode: local # local (default) — provisions directly from the machine running `hyve reconcile`.
@@ -11,7 +11,7 @@ reconcile:
 # the same operations as the CLI). Try it:
 #   hyve serve --path .
 #   curl http://localhost:8080/clusters
-# See docs/guides/server-mode.mdx in https://github.com/cbridges1/hyve-docs
+# See docs/guides/server-mode.mdx in https://github.com/cbridges1/hyve-website
 server:
   frontendUrl: "https://cbridges1.github.io/hyve-studio"
   auth:

@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Workflow
+metadata:
+  name: delete
+  description: Deprovision a GKE cluster
+spec:
+  jobs:
+    - name: deprovision
+      steps:
+        - name: check-exists
+          script: |
+            set -e
+
+            if ! gcloud container clusters describe "$HYVE_CLUSTER_NAME" \
+              --project "$HYVE_PARAM_PROJECT" \
+              --zone "$HYVE_PARAM_ZONE" \
+              > /dev/null 2>&1; then
+              echo "Cluster '$HYVE_CLUSTER_NAME' not found — nothing to delete"
+              exit 0
+            fi
+
+            gcloud container clusters delete "$HYVE_CLUSTER_NAME" \
+              --project "$HYVE_PARAM_PROJECT" \
+              --zone "$HYVE_PARAM_ZONE" \
+              --quiet

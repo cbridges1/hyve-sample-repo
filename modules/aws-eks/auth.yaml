@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: ClusterAuth
+metadata:
+  name: aws-eks-auth
+spec:
+  methods:
+    - name: local
+      description: >
+        Auth via the AWS CLI. Writes a kubeconfig entry that shells out to
+        `aws eks get-token` at kubectl time, so no static credentials are
+        embedded. Requires the aws CLI and kubectl.
+      deps:
+        - aws
+        - kubectl
+      auth:
+        script: |
+          aws eks update-kubeconfig \
+            --name "$HYVE_CLUSTER_NAME" \
+            --region "$HYVE_CLUSTER_REGION"
+      exports: KUBECONFIG

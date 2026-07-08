@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: Module
+metadata:
+  name: gke
+  version: 1.0.0
+  description: Google Kubernetes Engine clusters via the real gcloud CLI
+  author: hyve-sample-repo
+  license: MIT
+  tags:
+    - gcp
+    - gke
+    - kubernetes
+spec:
+  statusCacheTTL: 30s
+  params:
+    - name: project
+      description: GCP project ID
+      required: true
+    - name: zone
+      description: GCP zone, e.g. us-central1-a
+      required: true
+    - name: machine_type
+      description: GCE machine type for cluster nodes
+      default: e2-medium
+      required: false
+    - name: node_count
+      description: Number of nodes in the cluster
+      default: "3"
+      required: false
+  requirements:
+    tools:
+      - name: gcloud
+        description: "Google Cloud CLI — https://cloud.google.com/sdk/gcloud. Run `gcloud auth login` before reconciling."
+      - name: jq
+        description: "JSON processor — https://jqlang.github.io/jq/"
+      - name: kubectl
+        description: "Kubernetes CLI — required for auth"

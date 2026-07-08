@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: Workflow
+metadata:
+  name: status
+  description: Query the status of a local k3d cluster
+spec:
+  jobs:
+    - name: check-status
+      steps:
+        - name: query-cluster
+          script: |
+            set -e
+
+            info=$(k3d cluster list -o json | jq -c --arg name "$HYVE_CLUSTER_NAME" '.[] | select(.name==$name)')
+
+            if [ -z "$info" ]; then
+              echo "HYVE_CLUSTER_STATUS=NOT_FOUND"
+              exit 0
+            fi
+
+            servers_running=$(printf '%s' "$info" | jq -r '.serversRunning')
+            servers_count=$(printf '%s' "$info" | jq -r '.serversCount')
+            agents_running=$(printf '%s' "$info" | jq -r '.agentsRunning')
+            agents_count=$(printf '%s' "$info" | jq -r '.agentsCount')
+
+            if [ "$servers_running" = "$servers_count" ] && [ "$agents_running" = "$agents_count" ]; then
+              echo "HYVE_CLUSTER_STATUS=ACTIVE"
+            else
+              echo "HYVE_CLUSTER_STATUS=CREATING"
+            fi

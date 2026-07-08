@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Template
+metadata:
+  name: gke-template
+  description: >-
+    GKE clusters via the real gcloud CLI — requires an existing GCP project
+    and `gcloud auth login`/application-default credentials.
+spec:
+  driver:
+    source: ./modules/gke
+    version: 1.0.0
+  region: us-central1
+  params:
+    project: "CHANGEME-gcp-project-id"
+    zone: us-central1-a
+    machine_type: e2-medium
+    node_count: "3"
+  workflows:
+    onCreate:
+      - setup-demo
+    onDelete:
+      - cleanup-demo

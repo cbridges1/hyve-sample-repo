@@ -1,0 +1,59 @@
+apiVersion: v1
+kind: Module
+metadata:
+  name: civo
+  version: 1.0.0
+  description: Civo Kubernetes clusters (K3s and Talos) via the real Civo CLI
+  author: hyve-sample-repo
+  license: MIT
+  tags:
+    - civo
+    - kubernetes
+    - k3s
+spec:
+  statusCacheTTL: 30s
+  params:
+    - name: node_size
+      description: Node size
+      default: g4s.kube.small
+      required: false
+      choices:
+        - g4s.kube.small
+        - g4s.kube.medium
+        - g4s.kube.large
+        - g4s.kube.xlarge
+    - name: node_count
+      description: Number of nodes in the cluster
+      default: "3"
+      required: false
+    - name: cni_plugin
+      description: CNI plugin
+      default: flannel
+      required: false
+      choices:
+        - flannel
+        - cilium
+    - name: network_id
+      description: Civo network ID — uses the default network if not set
+      required: false
+    - name: kubernetes_version
+      description: Kubernetes version — uses the Civo default if not set
+      required: false
+    - name: cluster_type
+      description: Cluster type
+      default: k3s
+      required: false
+      choices:
+        - k3s
+        - talos
+  requirements:
+    env:
+      - name: CIVO_TOKEN
+        description: "Civo API token. Alternative: run `civo apikey save` before reconciling."
+    tools:
+      - name: civo
+        description: "Civo CLI — https://github.com/civo/cli"
+      - name: jq
+        description: "JSON processor — https://jqlang.github.io/jq/"
+      - name: kubectl
+        description: "Kubernetes CLI — required for auth"

@@ -1,19 +1,28 @@
 # hyve-sample-repo
 
-A working example of a [hyve](https://github.com/cbridges1/hyve) state repository — clone it, point `hyve` at it, and explore every piece (modules, templates, workflows, clusters, `hyve.yaml`) without needing any cloud credentials.
+A working example of a [hyve](https://github.com/cbridges1/hyve) state repository — clone it, point `hyve` at it, and explore every piece (modules, templates, workflows, clusters, `hyve.yaml`).
 
-Full documentation lives in [hyve-docs](https://github.com/cbridges1/hyve-docs).
+Full documentation lives in [hyve-website](https://github.com/cbridges1/hyve-website).
 
-## Why no cloud credentials?
+## Four real modules, one needs no credentials
 
-This repo ships three fully local, fake "cloud provider" modules — `demo-civo`, `demo-aws-eks`, and `demo-gke`. Each mirrors the params a real module for that provider would expose (region/zone, node size, instance type, etc.), but every operation just tracks state in a file (`.state/`, gitignored) instead of calling a real cloud API. They exist purely so this whole repository can be reconciled end-to-end offline, safely, as many times as you like. Everything else in this repo (templates, workflows, cluster definitions, `hyve.lock`) is exactly what a real module-backed repo looks like — swap any of these for a real module (e.g. `github.com/hyve-modules/aws-eks`) and the rest of the structure doesn't change.
+This repo ships four modules, and every one of them shells out to the **real** provider CLI — no fake state files, no simulated APIs:
+
+| Module | Provider | Credentials needed |
+|---|---|---|
+| `modules/k3d` | Local k3s-in-Docker via the `k3d` CLI | **None** — just Docker |
+| `modules/civo` | Civo Kubernetes | `CIVO_TOKEN` (or `civo apikey save`) |
+| `modules/aws-eks` | Amazon EKS | AWS credentials + an existing VPC/subnets/IAM roles |
+| `modules/gke` | Google Kubernetes Engine | `gcloud auth login` + a GCP project |
+
+**Start with `k3d`** — it's the only one that works out of the box with zero setup, and it's genuinely real: `hyve reconcile` will actually create Docker containers running k3s on your machine, not pretend to. The civo/aws-eks/gke modules are complete, working reference implementations you can point at your own accounts once you have credentials — fill in the placeholder values in their templates (`subnet_ids`, `eks_role_arn`, `project`, etc.) first.
 
 ### Two ways to write a module: shell scripts or YAML
 
-hyve modules can implement each operation (`create`, `delete`, `status`, `scale`, `auth`) as either a `.sh` script or a `<op>.yaml` file — hyve looks for the YAML file first, then falls back to a shell script. All three modules in this repo use the **YAML** style to demonstrate it:
+hyve modules can implement each operation (`create`, `delete`, `status`, `scale`, `auth`) as either a `.sh` script or a `<op>.yaml` file — hyve looks for the YAML file first, then falls back to a shell script. All four modules in this repo use the **YAML** style to demonstrate it:
 
-- `create.yaml` / `delete.yaml` / `status.yaml` / `scale.yaml` are `kind: Workflow` documents — the same job/step shape used by `workflows/*.yaml` — whose `run:` scripts do the actual work.
-- `auth.yaml` is a `kind: ClusterAuth` document describing how a real module would produce a kubeconfig; here it just prints an explanatory message since there's no real API server to authenticate into.
+- `create.yaml` / `delete.yaml` / `status.yaml` / `scale.yaml` are `kind: Workflow` documents — the same job/step shape used by `workflows/*.yaml` — whose `script:` steps shell out to the real CLI (`civo`, `aws`, `gcloud`, or `k3d`) and parse its JSON output with `jq`.
+- `auth.yaml` is a `kind: ClusterAuth` document that runs the provider's real kubeconfig command (`civo kubernetes config --save`, `aws eks update-kubeconfig`, `gcloud container clusters get-credentials`, `k3d kubeconfig merge`).
 
 Neither style is "more correct" — pick whichever fits a given provider's tooling. A module can even mix both (e.g. `create.sh` alongside `status.yaml`).
 
@@ -24,47 +33,57 @@ Neither style is "more correct" — pick whichever fits a given provider's tooli
 ├── hyve.yaml                             # reconcile + server config
 ├── hyve.lock                             # locked module versions (auto-managed)
 ├── modules/
-│   ├── demo-civo/                        # fake Civo-flavored module (region, node_size, node_count)
-│   ├── demo-aws-eks/                     # fake AWS EKS-flavored module (vpc_id, node_role_name, instance_type)
-│   └── demo-gke/                         # fake GKE-flavored module (project, zone, machine_type)
-│       ├── module.yaml                   # manifest: params + metadata
+│   ├── k3d/                              # local k3s-in-Docker — no credentials needed
+│   ├── civo/                             # real Civo Kubernetes (region, node_size, node_count)
+│   ├── aws-eks/                          # real Amazon EKS (subnet_ids, eks_role_arn, node_role_arn)
+│   └── gke/                              # real GKE (project, zone, machine_type)
+│       ├── module.yaml                   # manifest: params + requirements (tools/env)
 │       ├── create.yaml / delete.yaml     # kind: Workflow — provisioning lifecycle
 │       ├── status.yaml / scale.yaml      # kind: Workflow — status + resize
 │       └── auth.yaml                     # kind: ClusterAuth — kubeconfig auth method
 ├── templates/
-│   ├── demo-civo-template.yaml           # uses modules/demo-civo
-│   ├── demo-aws-template.yaml            # uses modules/demo-aws-eks
-│   └── demo-gcp-template.yaml            # uses modules/demo-gke
+│   ├── k3d-template.yaml                 # uses modules/k3d
+│   ├── civo-template.yaml                # uses modules/civo
+│   ├── aws-eks-template.yaml             # uses modules/aws-eks
+│   └── gke-template.yaml                 # uses modules/gke
 ├── workflows/
 │   ├── setup-demo.yaml                   # runs automatically on cluster create (see each template's onCreate)
 │   ├── cleanup-demo.yaml                 # runs automatically on cluster delete (see each template's onDelete)
 │   └── hello-world.yaml                  # standalone — run directly, demonstrates spec.inputs
-└── clusters/                             # one cluster created from each template
-    ├── demo-civo-01.yaml
-    ├── demo-aws-01.yaml
-    └── demo-gcp-01.yaml
+└── clusters/
+    └── local-k3d-01.yaml                 # ready to reconcile — no credentials required
 ```
 
 ## Try it
 
-Clone this repo and register it with hyve (or use `--path` directly):
+Clone this repo and register it with hyve (or use `--path` directly). You'll need [Docker](https://docker.com) and [k3d](https://k3d.io) installed for the credential-free path:
 
 ```bash
 git clone https://github.com/cbridges1/hyve-sample-repo.git
 cd hyve-sample-repo
 ```
 
-**Reconcile** — since the three `clusters/*.yaml` files already exist, this just confirms they're up to date across all three fake providers. Delete a file (or run `hyve cluster delete <name>`) and re-run to see the full teardown lifecycle, including the `cleanup-demo` workflow.
+**Reconcile** — `clusters/local-k3d-01.yaml` isn't pre-created; this actually spins up a real k3d cluster (containers, via Docker) the first time you run it:
 
 ```bash
 hyve reconcile --path .
+hyve cluster auth local-k3d-01 --path .
+kubectl get nodes
 ```
 
-**Create another cluster from any template:**
+Delete it (or run `hyve cluster delete local-k3d-01`) and reconcile again to see the full teardown lifecycle, including the `cleanup-demo` workflow — the k3d containers are genuinely removed.
+
+**Create another local cluster from the template:**
 
 ```bash
-hyve cluster create demo-civo-02 --template demo-civo-template --region NYC2 --set node_count=5
-hyve cluster create demo-aws-02 --template demo-aws-template --set instance_type=t3.large
+hyve cluster create local-k3d-02 --template k3d-template --set agent_count=2
+hyve reconcile --path .
+```
+
+**Use a real cloud provider** — fill in the placeholder params in the template first (subnets/IAM roles for EKS, project for GKE, or just set `CIVO_TOKEN` for Civo), then:
+
+```bash
+hyve cluster create my-civo-cluster --template civo-template --region NYC2
 hyve reconcile --path .
 ```
 
@@ -74,7 +93,7 @@ hyve reconcile --path .
 hyve workflow run hello-world --set NAME=you --path .
 ```
 
-**Explore the REST API** (see the Server Mode guide in [hyve-docs](https://github.com/cbridges1/hyve-docs)):
+**Explore the REST API** (see the Server Mode guide in [hyve-website](https://github.com/cbridges1/hyve-website)):
 
 ```bash
 hyve serve --path .

@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: Module
+metadata:
+  name: k3d
+  version: 1.0.0
+  description: >-
+    Local Kubernetes clusters (k3s-in-Docker) via the real k3d CLI. No cloud
+    account, no API token — just Docker. Unlike the civo/aws-eks/gke modules
+    in this repo, every command here genuinely creates/destroys containers on
+    your machine, so this is the module to reconcile if you want to see the
+    full lifecycle work end-to-end without any credentials.
+  author: hyve-sample-repo
+  license: MIT
+  tags:
+    - k3d
+    - kubernetes
+    - local
+spec:
+  statusCacheTTL: 10s
+  params:
+    - name: agent_count
+      description: Number of agent (worker) nodes
+      default: "1"
+      required: false
+    - name: k3s_version
+      description: k3s image tag, e.g. v1.31.5-k3s1 — uses k3d's default if not set
+      required: false
+  requirements:
+    tools:
+      - name: k3d
+        description: "k3d CLI — https://k3d.io (requires Docker)"
+      - name: docker
+        description: "Docker — https://docker.com"
+      - name: jq
+        description: "JSON processor — https://jqlang.github.io/jq/"
+      - name: kubectl
+        description: "Kubernetes CLI — required for auth"

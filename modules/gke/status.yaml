@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: Workflow
+metadata:
+  name: status
+  description: Query the status of a GKE cluster
+spec:
+  jobs:
+    - name: check-status
+      steps:
+        - name: query-cluster
+          script: |
+            set -e
+
+            result=$(gcloud container clusters describe "$HYVE_CLUSTER_NAME" \
+              --project "$HYVE_PARAM_PROJECT" \
+              --zone "$HYVE_PARAM_ZONE" \
+              --format=json 2>/dev/null) || result=""
+
+            if [ -z "$result" ]; then
+              echo "HYVE_CLUSTER_STATUS=NOT_FOUND"
+              exit 0
+            fi
+
+            status=$(printf '%s' "$result" | jq -r '.status // "UNKNOWN"')
+
+            case "$status" in
+              RUNNING)       echo "HYVE_CLUSTER_STATUS=ACTIVE" ;;
+              PROVISIONING)  echo "HYVE_CLUSTER_STATUS=CREATING" ;;
+              RECONCILING)   echo "HYVE_CLUSTER_STATUS=UPDATING" ;;
+              STOPPING)      echo "HYVE_CLUSTER_STATUS=DELETING" ;;
+              ERROR|DEGRADED) echo "HYVE_CLUSTER_STATUS=FAILED" ;;
+              *)             echo "HYVE_CLUSTER_STATUS=NOT_FOUND" ;;
+            esac

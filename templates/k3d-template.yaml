@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Template
+metadata:
+  name: k3d-template
+  description: >-
+    Local k3d clusters via the real k3d CLI — no cloud credentials, just
+    Docker. Works out of the box.
+spec:
+  driver:
+    source: ./modules/k3d
+    version: 1.0.0
+  region: local
+  params:
+    agent_count: "1"
+  workflows:
+    onCreate:
+      - setup-demo
+    onDelete:
+      - cleanup-demo

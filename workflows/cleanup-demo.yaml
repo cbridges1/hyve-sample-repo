@@ -3,10 +3,11 @@ kind: Workflow
 metadata:
   name: cleanup-demo
   description: >-
-    Runs automatically before a cluster is deleted (see templates/demo-template.yaml's
-    spec.workflows.onDelete). Lifecycle hooks like this run while the cluster still
-    exists — a real module's onDelete workflow might back up data or drain workloads
-    before the driver's delete operation actually tears anything down.
+    Runs automatically before a cluster is deleted (see each template's
+    spec.workflows.onDelete). Lifecycle hooks like this run while the cluster
+    still exists — a real module's onDelete workflow might back up data or
+    drain workloads before the driver's delete operation actually tears
+    anything down.
 spec:
   jobs:
     - name: backup

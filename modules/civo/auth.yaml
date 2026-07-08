@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ClusterAuth
+metadata:
+  name: civo-auth
+spec:
+  methods:
+    - name: local
+      description: >
+        Auth via the Civo CLI. Fetches the kubeconfig for the cluster and merges
+        it into ~/.kube/config. Requires the civo CLI and kubectl.
+      deps:
+        - civo
+        - kubectl
+      auth:
+        script: |
+          if [ -z "$CIVO_TOKEN" ]; then
+            echo "Error: CIVO_TOKEN is not set."
+          fi
+          civo kubernetes config "$HYVE_CLUSTER_NAME" \
+            --region "$HYVE_CLUSTER_REGION" \
+            --save \
+            --yes
+      exports: KUBECONFIG

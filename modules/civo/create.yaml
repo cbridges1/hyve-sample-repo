@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: Workflow
+metadata:
+  name: create
+  description: Provision a Civo Kubernetes cluster
+spec:
+  jobs:
+    - name: provision
+      steps:
+        - name: create-cluster
+          script: |
+            set -e
+
+            node_size="${HYVE_PARAM_NODE_SIZE:-g4s.kube.small}"
+            node_count="${HYVE_PARAM_NODE_COUNT:-3}"
+            cni="${HYVE_PARAM_CNI_PLUGIN:-flannel}"
+            cluster_type="${HYVE_PARAM_CLUSTER_TYPE:-k3s}"
+            network="${HYVE_PARAM_NETWORK_ID:-}"
+            k8s_version="${HYVE_PARAM_KUBERNETES_VERSION:-}"
+
+            set -- \
+              kubernetes create "$HYVE_CLUSTER_NAME" \
+              --region "$HYVE_CLUSTER_REGION" \
+              --nodes "$node_count" \
+              --size "$node_size" \
+              --cni-plugin "$cni" \
+              --cluster-type "$cluster_type" \
+              --wait \
+              -o json
+
+            [ -n "$network" ]     && set -- "$@" --network-id "$network"
+            [ -n "$k8s_version" ] && set -- "$@" --kubernetes-version "$k8s_version"
+
+            output=$(civo "$@")
+
+            echo "HYVE_CLUSTER_ID=$(printf '%s' "$output" | jq -r '.id')"
+            echo "HYVE_CIVO_CLUSTER_NAME=$(printf '%s' "$output" | jq -r '.name')"

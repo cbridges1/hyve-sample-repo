@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Workflow
+metadata:
+  name: create
+  description: Provision a GKE cluster
+spec:
+  jobs:
+    - name: provision
+      steps:
+        - name: create-cluster
+          script: |
+            set -e
+
+            machine_type="${HYVE_PARAM_MACHINE_TYPE:-e2-medium}"
+            node_count="${HYVE_PARAM_NODE_COUNT:-3}"
+
+            gcloud container clusters create "$HYVE_CLUSTER_NAME" \
+              --project "$HYVE_PARAM_PROJECT" \
+              --zone "$HYVE_PARAM_ZONE" \
+              --machine-type "$machine_type" \
+              --num-nodes "$node_count" \
+              --quiet \
+              --format=json > /tmp/gke-create-${HYVE_CLUSTER_NAME}.json
+
+            echo "HYVE_CLUSTER_ID=$(jq -r '.selfLink // empty' /tmp/gke-create-${HYVE_CLUSTER_NAME}.json)"
+            echo "HYVE_GKE_ENDPOINT=$(jq -r '.endpoint // empty' /tmp/gke-create-${HYVE_CLUSTER_NAME}.json)"
+            rm -f /tmp/gke-create-${HYVE_CLUSTER_NAME}.json

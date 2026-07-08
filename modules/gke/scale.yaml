@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Workflow
+metadata:
+  name: scale
+  description: Resize a GKE cluster's default node pool
+spec:
+  jobs:
+    - name: scale
+      steps:
+        - name: resize-cluster
+          script: |
+            set -e
+
+            node_count="${HYVE_PARAM_NODE_COUNT:-3}"
+
+            gcloud container clusters resize "$HYVE_CLUSTER_NAME" \
+              --project "$HYVE_PARAM_PROJECT" \
+              --zone "$HYVE_PARAM_ZONE" \
+              --num-nodes "$node_count" \
+              --quiet
+
+            echo "HYVE_NODE_COUNT=${node_count}"

@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: Workflow
+metadata:
+  name: create
+  description: Provision a local k3d (k3s-in-Docker) cluster
+spec:
+  jobs:
+    - name: provision
+      steps:
+        - name: create-cluster
+          script: |
+            set -e
+
+            agents="${HYVE_PARAM_AGENT_COUNT:-1}"
+            k3s_version="${HYVE_PARAM_K3S_VERSION:-}"
+
+            set -- cluster create "$HYVE_CLUSTER_NAME" --agents "$agents" --wait
+            [ -n "$k3s_version" ] && set -- "$@" --image "rancher/k3s:${k3s_version}"
+
+            k3d "$@"
+
+            info=$(k3d cluster list -o json | jq -c --arg name "$HYVE_CLUSTER_NAME" '.[] | select(.name==$name)')
+            echo "HYVE_CLUSTER_ID=$(printf '%s' "$info" | jq -r '.network.name')"
+            echo "HYVE_NODE_COUNT=$(printf '%s' "$info" | jq -r '.agentsCount')"

@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ClusterAuth
+metadata:
+  name: k3d-auth
+spec:
+  methods:
+    - name: local
+      description: >
+        Auth via the k3d CLI. Merges the cluster's kubeconfig into
+        ~/.kube/config and switches the current context to it. Requires the
+        k3d CLI and kubectl.
+      deps:
+        - k3d
+        - kubectl
+      auth:
+        script: |
+          k3d kubeconfig merge "$HYVE_CLUSTER_NAME" --kubeconfig-merge-default
+      exports: KUBECONFIG
