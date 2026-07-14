@@ -14,3 +14,6 @@ spec:
       - setup-demo
     onDelete:
       - cleanup-demo
+  resources:
+    - name: whoami
+      source: ./resource-files/whoami/manifest.yaml

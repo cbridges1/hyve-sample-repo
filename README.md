@@ -42,10 +42,12 @@ Neither style is "more correct" — pick whichever fits a given provider's tooli
 │       ├── status.yaml / scale.yaml      # kind: Workflow — status + resize
 │       └── auth.yaml                     # kind: ClusterAuth — kubeconfig auth method
 ├── templates/
-│   ├── k3d-template.yaml                 # uses modules/k3d
-│   ├── civo-template.yaml                # uses modules/civo
+│   ├── k3d-template.yaml                 # uses modules/k3d + a source: resource (see below)
+│   ├── civo-template.yaml                # uses modules/civo + helm:/secret: resources (see below)
 │   ├── aws-eks-template.yaml             # uses modules/aws-eks
 │   └── gke-template.yaml                 # uses modules/gke
+├── resource-files/
+│   └── whoami/manifest.yaml              # the raw manifest k3d-template's source: resource applies
 ├── workflows/
 │   ├── setup-demo.yaml                   # runs automatically on cluster create (see each template's onCreate)
 │   ├── cleanup-demo.yaml                 # runs automatically on cluster delete (see each template's onDelete)
@@ -54,21 +56,35 @@ Neither style is "more correct" — pick whichever fits a given provider's tooli
     └── local-k3d-01.yaml                 # ready to reconcile — no credentials required
 ```
 
+## `spec.resources` — Kubernetes manifests, Helm releases, and Secrets
+
+On top of provisioning the cluster itself, Hyve can own a layer of in-cluster resources — declared once, drift-checked and re-applied on every reconcile, the same way Terraform's `kubernetes`/`helm` providers work. Full docs: [Cluster Resources](https://cbridges1.github.io/hyve-website/docs/concepts/resources).
+
+Both non-`aws-eks`/`gke` templates demo a different kind:
+
+- **`k3d-template.yaml`** — a plain manifest (`source: ./resource-files/whoami/manifest.yaml`), deploying [`traefik/whoami`](https://github.com/traefik/whoami), a tiny HTTP echo server. Zero extra dependencies beyond what auth already needs (`kubectl`).
+- **`civo-template.yaml`** — a Helm release (`podinfo`, via `helm:`) plus a `secret:` resource rendered from your own shell environment at reconcile time, in both its forms (a bare env-var name, and the `{env, key}` mapping to rename). Needs `helm` on `PATH` in addition to `civo`/`jq`/`kubectl`. The demo secret isn't wired into podinfo — it's a standalone illustration of the feature — export `DEMO_GREETING` and `DEMO_API_KEY` (or drop them in a local `.env`, gitignored) before you reconcile, or it fails loudly naming exactly what's missing.
+
 ## Try it
 
-Clone this repo and register it with hyve (or use `--path` directly). You'll need [Docker](https://docker.com) and [k3d](https://k3d.io) installed for the credential-free path:
+Clone this repo and register it with hyve, pointing at your existing checkout with `--path` rather than having hyve clone a fresh copy into `~/.hyve/repositories`. You'll need [Docker](https://docker.com) and [k3d](https://k3d.io) installed for the credential-free path:
 
 ```bash
 git clone https://github.com/cbridges1/hyve-sample-repo.git
 cd hyve-sample-repo
+hyve git add sample --repo-url https://github.com/cbridges1/hyve-sample-repo.git --path . --set-current
 ```
 
-**Reconcile** — `clusters/local-k3d-01.yaml` isn't pre-created; this actually spins up a real k3d cluster (containers, via Docker) the first time you run it:
+<sub>Only `hyve reconcile`, `hyve serve`, and `hyve open` accept a direct `--path` override for a one-off command against a repo that isn't registered — `hyve cluster`/`hyve template`/`hyve workflow` subcommands always operate on whatever's currently registered (`hyve git add ... --set-current`, or switch later with `hyve git use sample`). Register once and every command below works with no flag.</sub>
+
+**Reconcile** — `clusters/local-k3d-01.yaml` isn't pre-created; this actually spins up a real k3d cluster (containers, via Docker) the first time you run it, and — via its `spec.resources` — deploys the `whoami` app for real too:
 
 ```bash
-hyve reconcile --path .
-hyve cluster auth local-k3d-01 --path .
+hyve reconcile
+hyve cluster auth local-k3d-01
 kubectl get nodes
+kubectl get pods                        # whoami, applied by spec.resources
+hyve cluster resources local-k3d-01     # declared + tracked resource state
 ```
 
 Delete it (or run `hyve cluster delete local-k3d-01`) and reconcile again to see the full teardown lifecycle, including the `cleanup-demo` workflow — the k3d containers are genuinely removed.
@@ -77,20 +93,20 @@ Delete it (or run `hyve cluster delete local-k3d-01`) and reconcile again to see
 
 ```bash
 hyve cluster create local-k3d-02 --template k3d-template --set agent_count=2
-hyve reconcile --path .
+hyve reconcile
 ```
 
-**Use a real cloud provider** — fill in the placeholder params in the template first (subnets/IAM roles for EKS, project for GKE, or just set `CIVO_TOKEN` for Civo), then:
+**Use a real cloud provider** — fill in the placeholder params in the template first (subnets/IAM roles for EKS, project for GKE, or just set `CIVO_TOKEN` for Civo; for `civo-template`'s `spec.resources` demo, also install `helm` and export `DEMO_GREETING`/`DEMO_API_KEY`), then:
 
 ```bash
 hyve cluster create my-civo-cluster --template civo-template --region NYC2
-hyve reconcile --path .
+hyve reconcile
 ```
 
 **Run the standalone workflow directly:**
 
 ```bash
-hyve workflow run hello-world --set NAME=you --path .
+hyve workflow run hello-world --set NAME=you
 ```
 
 **Explore the REST API** (see the Server Mode guide in [hyve-website](https://github.com/cbridges1/hyve-website)):

@@ -17,3 +17,11 @@ spec:
       - setup-demo
     onDelete:
       - cleanup-demo
+  # spec.resources: Kubernetes manifests/Helm releases/Secrets Hyve should
+  # own, drift-check, and re-apply every reconcile — see
+  # docs/concepts/resources.mdx in https://github.com/cbridges1/hyve-website.
+  # A raw manifest here since this template's whole point is zero extra
+  # dependencies; see civo-template.yaml for the helm: and secret: kinds.
+  resources:
+    - name: whoami
+      source: ./resource-files/whoami/manifest.yaml
