@@ -1,0 +1,52 @@
+apiVersion: v1
+kind: Workflow
+metadata:
+  name: admin-install-tools
+  description: >-
+    Installs tools that turned out to be missing from this container's image
+    (jq, kubectl, helm — the ones the modules/templates in this repo need
+    beyond what auth already requires). Not wired to any lifecycle hook —
+    trigger manually: hyve workflow run admin-install-tools. Written for a
+    Debian/Ubuntu-based image; adjust the package-manager commands if your
+    image uses something else (Alpine's apk, etc.).
+
+    This is a patch mechanism, not the primary one — prefer baking these
+    into the image's Dockerfile at build time (reproducible, no runtime
+    network dependency, works in network-restricted deployments). Use this
+    only to fix an already-running container without rebuilding it.
+
+    hyve has no user/permission model of its own, so "admin-only" isn't
+    anything hyve enforces here — it means not exposing this workflow's
+    trigger to callers who shouldn't have it, at whatever layer sits in
+    front of hyve (see docs/guides/server-mode.mdx in
+    https://github.com/cbridges1/hyve-website).
+spec:
+  jobs:
+    - name: install
+      steps:
+        - name: jq
+          script: |
+            command -v jq >/dev/null && { echo "jq already present"; exit 0; }
+            apt-get update && apt-get install -y jq
+
+        - name: kubectl
+          script: |
+            command -v kubectl >/dev/null && { echo "kubectl already present"; exit 0; }
+            curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+            install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+            rm -f kubectl
+
+        - name: helm
+          script: |
+            command -v helm >/dev/null && { echo "helm already present"; exit 0; }
+            curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+    - name: verify
+      description: Print versions so the workflow's own output confirms what's on PATH now
+      dependsOn: [install]
+      steps:
+        - name: print-versions
+          script: |
+            echo "jq:      $(jq --version 2>&1)"
+            echo "kubectl: $(kubectl version --client 2>&1 | head -1)"
+            echo "helm:    $(helm version --short 2>&1)"

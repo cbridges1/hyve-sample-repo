@@ -51,7 +51,8 @@ Neither style is "more correct" — pick whichever fits a given provider's tooli
 ├── workflows/
 │   ├── setup-demo.yaml                   # runs automatically on cluster create (see each template's onCreate)
 │   ├── cleanup-demo.yaml                 # runs automatically on cluster delete (see each template's onDelete)
-│   └── hello-world.yaml                  # standalone — run directly, demonstrates spec.inputs
+│   ├── hello-world.yaml                  # standalone — run directly, demonstrates spec.inputs
+│   └── admin-install-tools.yaml          # standalone — patches a running container missing jq/kubectl/helm
 └── clusters/
     └── local-k3d-01.yaml                 # ready to reconcile — no credentials required
 ```
@@ -64,6 +65,14 @@ Both non-`aws-eks`/`gke` templates demo a different kind:
 
 - **`k3d-template.yaml`** — a plain manifest (`source: ./resource-files/whoami/manifest.yaml`), deploying [`traefik/whoami`](https://github.com/traefik/whoami), a tiny HTTP echo server. Zero extra dependencies beyond what auth already needs (`kubectl`).
 - **`civo-template.yaml`** — a Helm release (`podinfo`, via `helm:`) plus a `secret:` resource rendered from your own shell environment at reconcile time, in both its forms (a bare env-var name, and the `{env, key}` mapping to rename). Needs `helm` on `PATH` in addition to `civo`/`jq`/`kubectl`. The demo secret isn't wired into podinfo — it's a standalone illustration of the feature — export `DEMO_GREETING` and `DEMO_API_KEY` (or drop them in a local `.env`, gitignored) before you reconcile, or it fails loudly naming exactly what's missing.
+
+## Making sure the right tools are on `PATH`
+
+If you're running `hyve serve` in a container, the reliable way to guarantee `git`/`kubectl`/`helm`/`civo`/etc. are present is baking them into the image at build time — see the [Server Mode guide](https://cbridges1.github.io/hyve-website/docs/guides/server-mode#tool-dependencies) for a sample Dockerfile snippet. `workflows/admin-install-tools.yaml` is the fallback for patching a container that's already running without a tool it turns out it needed — try it with:
+
+```bash
+hyve workflow run admin-install-tools
+```
 
 ## Try it
 
