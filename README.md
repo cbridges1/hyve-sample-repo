@@ -53,9 +53,19 @@ Neither style is "more correct" — pick whichever fits a given provider's tooli
 │   ├── cleanup-demo.yaml                 # runs automatically on cluster delete (see each template's onDelete)
 │   ├── hello-world.yaml                  # standalone — run directly, demonstrates spec.inputs
 │   └── admin-install-tools.yaml          # standalone — patches a running container missing jq/kubectl/helm
-└── clusters/
-    └── local-k3d-01.yaml                 # ready to reconcile — no credentials required
+├── clusters/
+│   └── local-k3d-01.yaml                 # ready to reconcile — no credentials required
+└── cluster-state/                        # appears after your first reconcile — see below
+    └── local-k3d-01.state.yaml           # reconciler-owned: driverOutputs + appliedResources
 ```
+
+`clusters/` is the only directory meant to be hand-edited. `cluster-state/`
+holds one generated `<name>.state.yaml` sidecar per cluster — content
+hashes, timestamps, tracked-object lists — so those change on every
+reconcile without touching the diff of the file you actually wrote. It's
+still plain YAML and still git-tracked (treat it like a lockfile, not
+something to hand-edit), just out of the directory listing you actually
+look at day to day.
 
 ## `spec.resources` — Kubernetes manifests, Helm releases, and Secrets
 
